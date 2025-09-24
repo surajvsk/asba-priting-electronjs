@@ -1,0 +1,73 @@
+ #pdf-container {
+   display: inline-block;
+   position: relative;
+   margin: 0;
+   padding: 0;
+   line-height: 0;
+   /* Remove inline space */
+ }
+
+ #canvas {
+   display: block;
+   border: 1px solid #ccc;
+   margin: 0;
+   padding: 0;
+   background-color: aqua;
+ }
+
+ /* .movable-text {
+   position: absolute;
+   background: rgba(255, 255, 0, 0.7);
+   padding: 2px 5px;
+   cursor: move;
+   border: 1px solid #000;
+   color: fuchsia;
+ } */
+
+
+ .movable-text {
+  position: absolute;
+  cursor: move;
+  outline: none;        /* Remove focus outline */
+  border: none;         /* Remove any border */
+  background: transparent; /* No background */
+  user-select: none;    /* Prevent text selection while dragging */
+}
+
+ #coordinates {
+   margin: 20px;
+   font-size: 16px;
+   font-weight: bold;
+   text-align: center;
+ }
+
+ /* Set the height and enable scrolling */
+ #coordinates-table {
+   height: 450px;
+   overflow-y: auto;
+   /* Adds vertical scrolling */
+   display: block;
+   /* Ensures the height is applied */
+ }
+
+ /* Optional: Keep table headers fixed during scroll */
+ #coordinates-table thead th {
+   position: sticky;
+   top: 0;
+   background-color: #f2f2f2;
+   /* Add background to distinguish header */
+   z-index: 1;
+ }
+
+
+ .fade-in {
+   opacity: 0;
+   animation: fadeIn 0.5s forwards;
+   /* half-second fade */
+ }
+
+ @keyframes fadeIn {
+   to {
+     opacity: 1;
+   }
+ }
