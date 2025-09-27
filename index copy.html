@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ASBA Form</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+   <link rel="stylesheet" href="assets/css/style.css">
+  </head>
+  <body>
+
+<div id="navbar-container"></div> <!-- Navbar will load here -->
+
+<h1>ASBA FORM Coordinates</h1>
+
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-md-5">
+      <!-- <textarea id="json-output" rows="10" cols="50" placeholder="JSON output will appear here..."></textarea> -->
+      <select class="form-select mb-2 rounded-0" id="symbol-select">
+        <option value="0">Select Symbol</option>
+        <option value="ARUNAYA">ARUNAYA</option>
+        <option value="ATHER">ATHER</option>
+        <option value="MANOJJEWEL">MANOJJEWEL</option>
+      </select>
+      <input type="file" class="form-control rounded-0" id="file-input" accept="application/pdf">
+      <select class="form-select mt-2 rounded-0" id="form-type-select">
+        <option value="0">Select Form Type</option>
+        <option value="PRINTED_FORM">Printed Form</option>
+        <option value="BLANK_FORM">Blank Form</option>
+      </select>
+      <button class="buildJSON btn btn-sm btn-danger mt-2 rounded-0">Final Submission</button>
+      <button class="downloadPreview btn btn-sm btn-primary mt-2 rounded-0">Preview PDF</button>
+      <div id="coordinates">Coordinates: (x: 0, y: 0) | Position: center</div>
+      <table class="table table-bordered table-striped table-sm mt-3" id="coordinates-table">
+        <thead>
+            <tr>
+                <th>Key</th>
+                <th>X</th>
+                <th>Y</th>
+                <th>Font Size</th>
+                <th>Font Spacing</th>
+                <th>Value</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+           
+        </tbody>
+    </table>
+
+    </div>
+    <div class="col-md-5">
+      <div id="pdf-container">
+        <canvas id="canvas"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <!-- <p id="info"></p> -->
+
+    <script src="assets/js/navbar.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" ></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
+ <!-- <script src="./renderer.js"></script> -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    $(".buildJSON").on("click", function () {
+    console.log("Building JSON...");
+  const array = [];
+  $("#coordinates-table tbody tr").each(function (_, elm) {
+    const key = $(elm).data("key");
+    const x = $(elm).data("x") || 0;
+    const y = $(elm).data("y") || 0;
+    const value = $(elm).find("input[type='text']").val() || "unknown";
+    const fontSize = $(elm).find(".fontSize").val() || 10;
+    const isChecked = $(elm).find("input[type='checkbox']").is(":checked");
+    const wordspaceCount = $(elm).find(".wordspaceCount").val() || 10;
+    if (isChecked) {
+      array.push({
+        x: Number(x),
+        y: Number(y),
+        key: key,
+        fontSize: Number(fontSize),
+        wordspaceCount: Number(wordspaceCount),
+        value: value,
+        is_checked: isChecked ? 1 : 0,
+      });
+    }
+  });
+
+  let finalData = {
+    symbol: $("#symbol-select").val(),
+    type: $("#form-type-select").val(),
+    coordinates: array,
+  };
+  window.electronAPI.overlayPDF(finalData);
+    });
+  });
+</script>
+
+    <script>
+      const pdfContainer = document.getElementById("pdf-container");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const coordinatesDisplay = document.getElementById("coordinates");
+    
+      let pdfDoc = null;
+      let scale = 1;
+      let currentViewport = null;
+    
+      const placeholders = [
+    { key: "ApplicationNo1", x: 150, y: 150, value: "55556666", wordspaceCount: 0 },
+    { key: "ApplicationNo2", x: 200, y: 200, value: "55556666", wordspaceCount: 0 },
+    { key: "ApplicationNo3", x: 208, y: 208, value: "55556666" , wordspaceCount: 0},
+    { key: "email1", x: 250, y: 250, value: "youremail@domain.com", wordspaceCount: 0 },
+    { key: "email2", x: 250, y: 250, value: "youremail@domain.com" , wordspaceCount: 0},
+    { key: "MobileNo1", x: 300, y: 300, value: "1112227778", wordspaceCount: 0 },
+    { key: "MobileNo2", x: 350, y: 300, value: "1112227778", wordspaceCount: 0 },
+    { key: "ApplicantName1", x: 400, y: 300, value: "Arihant Capital Markets Limited" , wordspaceCount: 0},
+    { key: "ApplicantName2", x: 450, y: 300, value: "Arihant Capital Markets Limited" , wordspaceCount: 0},
+    { key: "ApplicantName3", x: 500, y: 300, value: "Arihant Capital Markets Limited" , wordspaceCount: 0},
+    { key: "amount1", x: 500, y: 300, value: "100000", wordspaceCount: 0 },
+    { key: "amount2", x: 500, y: 300, value: "100000" , wordspaceCount: 0},
+    { key: "no_of_bid1", x: 500, y: 300, value: "50" , wordspaceCount: 0},
+    { key: "no_of_bid2", x: 500, y: 300, value: "50" , wordspaceCount: 0},
+    { key: "bid_price1", x: 500, y: 300, value: "500" , wordspaceCount: 0},
+    { key: "bid_price2", x: 500, y: 300, value: "500" , wordspaceCount: 0},
+    { key: "amount_in_word", x: 500, y: 300, value: "Five Thousand ninty nine" , wordspaceCount: 0},
+    { key: "dpid1", x: 500, y: 300, value: "IN12345678950" , wordspaceCount: 0},
+    { key: "dpid2", x: 500, y: 300, value: "IN12345678950" , wordspaceCount: 0},
+    { key: "panNo1", x: 500, y: 300, value: "AYCPV8888G" , wordspaceCount: 0  },
+    { key: "panNo2", x: 500, y: 300, value: "AYCPV8888G" , wordspaceCount: 0},
+    { key: "UPI", x: 550, y: 300, value: "arihantcapital@bank.ok" , wordspaceCount: 0},
+  ];
+
+  placeholders.forEach(function(item){
+        $("#coordinates-table tbody").append(`<tr data-key="${item.key}" data-x="${item.x}" data-y="${item.y}" data-value="${item.value}">
+          <td data-key="${item.key}">${item.key}</td>
+          <td class="x">${item.x}</td>
+          <td class="y">${item.y}</td>
+          <td><input type="number" class="form-control rounded-0 fontSize" value="10"></td>
+          <td><input type="number" class="form-control rounded-0 wordspaceCount" value="${item.wordspaceCount}"></td>
+          <td><input type="text" class="form-control rounded-0 value" value="${item.value}"></td>
+          <td><input type="checkbox" class="active rounded-0"></td>
+          </tr>`);
+  });
+    
+      document.getElementById("file-input").addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (file && file.type === "application/pdf") {
+          const fileReader = new FileReader();
+          fileReader.onload = async function (event) {
+            const typedArray = new Uint8Array(event.target.result);
+            const pdf = await pdfjsLib.getDocument(typedArray).promise;
+            pdfDoc = pdf;
+            renderPage(1);
+          };
+          fileReader.readAsArrayBuffer(file);
+        }
+      });
+    
+      async function renderPage(pageNumber) {
+        const page = await pdfDoc.getPage(pageNumber);
+        const viewport = page.getViewport({ scale });
+        currentViewport = viewport;
+    
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.width = `${viewport.width}px`;
+        canvas.style.height = `${viewport.height}px`;
+    
+        await page.render({ canvasContext: ctx, viewport }).promise;
+    
+        placeholders.forEach(({ key, x, y }) => {
+          // Convert PDF (0,0 bottom-left) to canvas (0,0 top-left)
+          const canvasY = viewport.height - y;
+          // addMovableText(key, x, canvasY);
+        });
+      }
+    
+function addMovableText(key, pdfX, pdfY, fontSize, wordspaceCount, value) {
+  const div = document.createElement("div");
+  div.className = "movable-text";
+  div.textContent = value;
+  div.style.fontSize = `${fontSize}px`;
+  div.style.wordSpacing = `${wordspaceCount}px`;
+  div.style.position = "absolute";
+  div.style.userSelect = "none";
+  div.style.background = "transparent";
+  div.style.border = "none";
+  div.style.outline = "none";
+  div.setAttribute("data-key", key);
+
+  // PDF bottom-left → canvas top-left
+  const canvasX = pdfX * currentViewport.scale;
+  const canvasY = currentViewport.height - pdfY * currentViewport.scale;
+  div.style.left = `${canvasX}px`;
+  div.style.top = `${canvasY}px`;
+
+  div.setAttribute("data-x", pdfX);
+  div.setAttribute("data-y", pdfY);
+
+  let isDragging = false, offsetX = 0, offsetY = 0;
+
+  div.addEventListener("mousedown", (e) => {
+    isDragging = true;
+    offsetX = e.offsetX;
+    offsetY = e.offsetY;
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+
+    const rect = pdfContainer.getBoundingClientRect();
+    const canvasXNew = e.clientX - rect.left - offsetX;
+    const canvasYNew = e.clientY - rect.top - offsetY;
+
+    // Canvas → PDF coordinates (bottom-left origin)
+    const pdfXNew = canvasXNew / currentViewport.scale;
+    const pdfYNew = (currentViewport.height - canvasYNew) / currentViewport.scale;
+
+    div.style.left = `${pdfXNew * currentViewport.scale}px`;
+    div.style.top = `${(currentViewport.height - pdfYNew * currentViewport.scale)}px`;
+
+    // Save PDF coordinates directly
+    div.setAttribute("data-x", pdfXNew.toFixed(2));
+    div.setAttribute("data-y", pdfYNew.toFixed(2));
+
+    coordinatesDisplay.textContent = `PDF Coordinates: (x: ${pdfXNew.toFixed(2)}, y: ${pdfYNew.toFixed(2)})`;
+
+    // Update table
+    const row = $("#coordinates-table tbody tr").filter(function() {
+      return $(this).data("key") === key;
+    });
+    if (row.length) {
+      row.data("x", pdfXNew);
+      row.data("y", pdfYNew);
+      row.find(".x").text(pdfXNew.toFixed(2));
+      row.find(".y").text(pdfYNew.toFixed(2));
+    }
+  });
+
+  document.addEventListener("mouseup", () => { isDragging = false; });
+
+  pdfContainer.appendChild(div);
+}
+
+      $(document).ready(function () {
+
+        $("#coordinates-table").on("change", ".active", function () {
+          const row = $(this).closest("tr");
+          const key = row.data("key");
+          const x = row.data("x");
+          const y = row.data("y");
+          const fontSize = row.find(".fontSize").val() || 10;
+          const wordspaceCount = row.find(".wordspaceCount").val() || 0;
+          const value = row.find(".value").val() || "unknown";
+          const valueWithSpaces = insertSpaces(value, wordspaceCount);
+          const isChecked = $(this).is(":checked");
+          console.log(key, x, y, fontSize, wordspaceCount, value, isChecked);
+
+          if (isChecked) {
+            row.find("x").text(x);
+            row.find("y").text(y);
+            const canvasY = currentViewport.height - y;
+            addMovableText(key, x, canvasY, fontSize, wordspaceCount, valueWithSpaces);
+          } else {
+            pdfContainer.querySelector(`.movable-text[data-key="${key}"]`).remove();
+          }
+        });
+
+    // //fontSize
+    $("#coordinates-table").on("input", ".fontSize", function () {
+      const row = $(this).closest("tr");
+      const key = row.data("key");
+      const fontSize = $(this).val();
+      console.log(key, fontSize);
+      const x = row.data("x");
+      const y = row.data("y");
+      const wordspaceCount = row.find(".wordspaceCount").val() || 0;
+      const value = row.find(".value").val() || "unknown";
+      const valueWithSpaces = insertSpaces(value, wordspaceCount);
+      const canvasY = currentViewport.height - y;
+      addMovableText(key, x, canvasY, fontSize, wordspaceCount, valueWithSpaces);
+      pdfContainer.querySelector(`.movable-text[data-key="${key}"]`).remove();
+    });
+
+    // wordSpacing
+    $("#coordinates-table").on("input", ".wordspaceCount", function () {
+      const row = $(this).closest("tr");
+      const key = row.data("key");
+      const fontSize = row.find(".fontSize").val();
+      console.log(key, fontSize);
+      const x = row.data("x");
+      const y = row.data("y");
+      const wordspaceCount = row.find(".wordspaceCount").val() || 0;
+      const value = row.find(".value").val() || "unknown";
+      const valueWithSpaces = insertSpaces(value, wordspaceCount);
+      const canvasY = currentViewport.height - y;
+      addMovableText(key, x, canvasY, fontSize, wordspaceCount, valueWithSpaces);
+      pdfContainer.querySelector(`.movable-text[data-key="${key}"]`).remove();
+    });
+
+
+
+    function insertSpaces(input, spaceCount) {
+      // Create a string of spaces based on spaceCount
+      const spaces = ' '.repeat(spaceCount);
+      // Split the input into characters, join them with spaces, and return the result
+      return input.split('').join(spaces);
+  }
+
+
+      });
+
+
+
+
+    </script>
+  </body>
+</html>

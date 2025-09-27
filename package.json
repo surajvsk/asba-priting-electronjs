@@ -10,7 +10,8 @@
   "author": "Dynamite Technology private limited",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^38.1.2"
+    "electron": "^38.1.2",
+    "electron-rebuild": "^3.2.9"
   },
   "dependencies": {
     "pdf-lib": "^1.17.1"

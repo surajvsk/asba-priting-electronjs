@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PDF Viewer with Drag & Drop Fields</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      #pdf-container {
+         display: inline-block;
+         position: relative;
+         margin: 0;
+         padding: 0;
+         line-height: 0;
+      }
+      #canvas {
+         display: block;
+         border: 1px solid #ccc;
+         margin: 0;
+         padding: 0;
+         background-color: aqua;
+      }
+      .movable-text {
+         position: absolute;
+         background: rgba(255, 255, 0, 0.7);
+         padding: 5px 15px;
+         cursor: move;
+         border: 1px solid #000;
+         color: fuchsia;
+      }
+      #coordinates {
+         margin: 20px;
+         font-size: 16px;
+         font-weight: bold;
+         text-align: center;
+      }
+      #coordinates-table {
+          height: 450px;
+          overflow-y: auto;
+          display: block;
+      }
+      #coordinates-table thead th {
+          position: sticky;
+          top: 0;
+          background-color: #f2f2f2;
+          z-index: 1;
+      }
+      #draggable-fields button {
+          cursor: grab;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>PDF Viewer with Movable & Draggable Fields</h1>
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-md-5">
+
+          <!-- Draggable Fields -->
+          <div class="mb-2">
+            <label>Drag Fields onto PDF:</label>
+            <div id="draggable-fields" class="d-flex flex-wrap gap-2">
+              <button type="button" class="btn btn-outline-secondary draggable" data-key="ApplicationNo" data-value="55556666" draggable="true">ApplicationNo</button>
+              <button type="button" class="btn btn-outline-secondary draggable" data-key="email" data-value="youremail@domain.com" draggable="true">Email</button>
+              <button type="button" class="btn btn-outline-secondary draggable" data-key="MobileNo" data-value="1112227778" draggable="true">MobileNo</button>
+              <button type="button" class="btn btn-outline-secondary draggable" data-key="ApplicantName" data-value="Arihant Capital Markets Limited" draggable="true">ApplicantName</button>
+              <button type="button" class="btn btn-outline-secondary draggable" data-key="amount" data-value="100000" draggable="true">Amount</button>
+              <button type="button" class="btn btn-outline-secondary draggable" data-key="panNo" data-value="AYCPV8888G" draggable="true">PAN</button>
+              <button type="button" class="btn btn-outline-secondary draggable" data-key="UPI" data-value="arihantcapital@bank.ok" draggable="true">UPI</button>
+            </div>
+          </div>
+
+          <select class="form-select mb-2 rounded-0" id="symbol-select">
+            <option value="0">Select Symbol</option>
+            <option value="ARUNAYA">ARUNAYA</option>
+            <option value="ATHER">ATHER</option>
+            <option value="MANOJJEWEL">MANOJJEWEL</option>
+          </select>
+          <input type="file" class="form-control rounded-0" id="file-input" accept="application/pdf">
+          <select class="form-select mt-2 rounded-0" id="form-type-select">
+            <option value="0">Select Form Type</option>
+            <option value="PRINTED_FORM">Printed Form</option>
+            <option value="BLANK_FORM">Blank Form</option>
+          </select>
+          <button class="buildJSON btn btn-sm btn-danger mt-2 rounded-0">Final Submission</button>
+          <button class="downloadPreview btn btn-sm btn-primary mt-2 rounded-0">Preview PDF</button>
+          <div id="coordinates">Coordinates: (x: 0, y: 0)</div>
+          <table class="table table-bordered table-striped table-sm mt-3" id="coordinates-table">
+            <thead>
+                <tr>
+                    <th>Key</th>
+                    <th>X</th>
+                    <th>Y</th>
+                    <th>Font Size</th>
+                    <th>Font Spacing</th>
+                    <th>Value</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+
+        </div>
+        <div class="col-md-5">
+          <div id="pdf-container">
+            <canvas id="canvas"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      const pdfContainer = document.getElementById("pdf-container");
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const coordinatesDisplay = document.getElementById("coordinates");
+      let pdfDoc = null, scale = 1, currentViewport = null;
+      let placeholderCounter = 0; // unique keys
+
+      document.getElementById("file-input").addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (file && file.type === "application/pdf") {
+          const fileReader = new FileReader();
+          fileReader.onload = async function (event) {
+            const typedArray = new Uint8Array(event.target.result);
+            pdfDoc = await pdfjsLib.getDocument(typedArray).promise;
+            renderPage(1);
+          };
+          fileReader.readAsArrayBuffer(file);
+        }
+      });
+
+      async function renderPage(pageNumber) {
+        const page = await pdfDoc.getPage(pageNumber);
+        const viewport = page.getViewport({ scale });
+        currentViewport = viewport;
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        canvas.style.width = `${viewport.width}px`;
+        canvas.style.height = `${viewport.height}px`;
+        await page.render({ canvasContext: ctx, viewport }).promise;
+      }
+
+      function addMovableText(text, x, y, fontSize, wordspaceCount, value) {
+        const div = document.createElement("div");
+        div.className = "movable-text";
+        div.textContent = value;
+        div.title = text;
+        div.style.left = `${x}px`;
+        div.style.top = `${y}px`;
+        div.style.fontSize = `${fontSize}px`;
+        div.style.wordSpacing = `${wordspaceCount}px`;
+        div.setAttribute("data-key", text);
+
+        let isDragging = false, offsetX = 0, offsetY = 0;
+
+        div.addEventListener("mousedown", (e) => {
+          isDragging = true;
+          offsetX = e.offsetX;
+          offsetY = e.offsetY;
+        });
+
+        document.addEventListener("mousemove", (e) => {
+          if (!isDragging) return;
+          const containerRect = pdfContainer.getBoundingClientRect();
+          let newX = e.clientX - containerRect.left - offsetX;
+          let newY = e.clientY - containerRect.top - offsetY;
+
+          // Clamp
+          newX = Math.max(0, Math.min(newX, containerRect.width - div.offsetWidth));
+          newY = Math.max(0, Math.min(newY, containerRect.height - div.offsetHeight));
+
+          div.style.left = `${newX}px`;
+          div.style.top = `${newY}px`;
+
+          // PDF coordinates (0,0 at bottom-left)
+          const pdfX = Math.round(newX);
+          const pdfY = Math.round(currentViewport.height - newY - div.offsetHeight);
+
+          coordinatesDisplay.textContent = `PDF Coordinates: (x: ${pdfX}, y: ${pdfY})`;
+
+          // Update table
+          const row = $("#coordinates-table tbody tr").filter(function() {
+            return $(this).data("key") === text;
+          });
+          if (row.length) {
+            row.data("x", pdfX);
+            row.data("y", pdfY);
+            row.find(".x").text(pdfX);
+            row.find(".y").text(pdfY);
+          }
+        });
+
+        document.addEventListener("mouseup", () => isDragging = false);
+        pdfContainer.appendChild(div);
+      }
+
+      // Drag & drop dynamic fields
+      document.querySelectorAll(".draggable").forEach(el => {
+        el.addEventListener("dragstart", (e) => {
+          e.dataTransfer.setData("text/plain", JSON.stringify({
+            key: el.dataset.key,
+            value: el.dataset.value
+          }));
+        });
+      });
+
+      pdfContainer.addEventListener("dragover", (e) => e.preventDefault());
+
+      pdfContainer.addEventListener("drop", (e) => {
+        e.preventDefault();
+        const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+        const rect = pdfContainer.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const key = `${data.key}_${++placeholderCounter}`;
+        const value = data.value;
+        const fontSize = 10;
+        const wordspaceCount = 0;
+
+        addMovableText(key, x, y, fontSize, wordspaceCount, value);
+
+        const pdfX = Math.round(x);
+        const pdfY = Math.round(currentViewport.height - y);
+
+        $("#coordinates-table tbody").append(`<tr data-key="${key}" data-x="${pdfX}" data-y="${pdfY}" data-value="${value}">
+          <td>${key}</td>
+          <td class="x">${pdfX}</td>
+          <td class="y">${pdfY}</td>
+          <td><input type="number" class="form-control rounded-0 fontSize" value="${fontSize}"></td>
+          <td><input type="number" class="form-control rounded-0 wordspaceCount" value="${wordspaceCount}"></td>
+          <td><input type="text" class="form-control rounded-0 value" value="${value}"></td>
+          <td><input type="checkbox" class="active rounded-0" checked></td>
+        </tr>`);
+      });
+
+      // Build JSON
+      document.addEventListener('DOMContentLoaded', () => {
+        $(".buildJSON").on("click", function () {
+          const array = [];
+          $("#coordinates-table tbody tr").each(function (_, elm) {
+            const key = $(elm).data("key");
+            const x = $(elm).data("x") || 0;
+            const y = $(elm).data("y") || 0;
+            const value = $(elm).find("input[type='text']").val() || "unknown";
+            const fontSize = $(elm).find(".fontSize").val() || 10;
+            const wordspaceCount = $(elm).find(".wordspaceCount").val() || 0;
+            const isChecked = $(elm).find("input[type='checkbox']").is(":checked");
+            if (isChecked) {
+              array.push({
+                x: Number(x),
+                y: Number(y),
+                key: key,
+                fontSize: Number(fontSize),
+                wordspaceCount: Number(wordspaceCount),
+                value: value,
+                is_checked: isChecked ? 1 : 0,
+              });
+            }
+          });
+
+          const finalData = {
+            symbol: $("#symbol-select").val(),
+            type: $("#form-type-select").val(),
+            coordinates: array,
+          };
+          console.log(finalData);
+          window.electronAPI.overlayPDF(finalData);
+        });
+      });
+    </script>
+  </body>
+</html>

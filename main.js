@@ -1,7 +1,8 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const fs = require('fs');
-const { PDFDocument, rgb } = require('pdf-lib'); // Using pdf-lib for PDF overlay
+// Database file path
 const path = require('node:path')
+const { PDFDocument, rgb } = require('pdf-lib'); // Using pdf-lib for PDF overlay
 const createWindow = () => {
   const win = new BrowserWindow({
     width: 800,
@@ -24,35 +25,54 @@ ipcMain.on('overlay-pdf', async (event, data) => {
   console.log('Received data for PDF overlay:', data);
 
   try {
-    // Load existing PDF
-    const existingPdfBytes = fs.readFileSync("ASBA.pdf");
+    // Load the existing PDF file
+    const pdfPath = path.join(__dirname, 'ASBA.pdf');
+    const existingPdfBytes = fs.readFileSync(pdfPath);
     const pdfDoc = await PDFDocument.load(existingPdfBytes);
 
-    // Create a new PDF for just the first page
+    // Create a new PDF that contains only the first page
     const newPdfDoc = await PDFDocument.create();
     const [firstPage] = await newPdfDoc.copyPages(pdfDoc, [0]);
     newPdfDoc.addPage(firstPage);
 
-    // Overlay each coordinate on the first page
-    data.coordinates.forEach((item) => {
+data.coordinates.forEach((item) => {
+  let textValue = item.value || item.key || ''; // fallback if empty
 
-      firstPage.drawText(item.value, {
-        x: item.x,
-        y: item.y,
-        size: item.fontSize,
-        color: rgb(0, 0, 0), // Black text
-         letterSpacing: Number(item.wordspaceCount) // add space between characters
-      });
-    });
+  // ✅ Apply splitter effect using letterSpacing
+  const spacing = Number(item.letterSpacing) || 0;
 
-    // Save new PDF
+  // Create a spaced string by adding extra spaces
+  if (spacing > 0) {
+    const spaceCount = Math.max(1, Math.round(spacing / 2)); // adjust factor to tune spacing
+    const spaceStr = ' '.repeat(spaceCount);
+    textValue = textValue.split('').join(spaceStr);
+  }
+
+  firstPage.drawText(textValue, {
+    x: Number(item.x),
+    y: Number(item.y),
+    size: Number(item.fontSize) || 10,
+    color: rgb(0, 0, 0),
+    // optional: small extra characterSpacing for fine tuning
+    characterSpacing: 0,
+  });
+});
+
+    // ✅ Save PDF in same folder as your Electron app
+    const savePath = path.join(__dirname, 'overlayed.pdf');
     const pdfBytes = await newPdfDoc.save();
-    const savePath = path.join('/', 'overlayed.pdf');
     fs.writeFileSync(savePath, pdfBytes);
 
-    dialog.showMessageBox({ message: `PDF saved as overlayed.pdf` });
+    dialog.showMessageBox({
+      type: 'info',
+      message: `✅ PDF saved successfully as overlayed.pdf`,
+      detail: `File path: ${savePath}`,
+    });
+
+    console.log(`PDF saved successfully at: ${savePath}`);
   } catch (err) {
-    console.error(err);
+    console.error('Error overlaying PDF:', err);
+    dialog.showErrorBox('PDF Overlay Error', err.message);
   }
 });
 
