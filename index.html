@@ -1,308 +1,278 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PDF Viewer with Drag & Drop Fields & Sidebar</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    #pdf-container {
-       display: inline-block;
-       position: relative;
-       margin: 0;
-       padding: 0;
-       line-height: 0;
-    }
-    #canvas {
-       display: block;
-       border: 1px solid #ccc;
-       margin: 0;
-       padding: 0;
-       background-color: aqua;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBERNET Login</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
 
-.movable-text {
-   position: absolute;
-   background: rgba(255, 255, 0, 0.7);
-   padding: 5px 5px;
-   cursor: move;
-   border: 1px solid #000;
-   color: fuchsia;
-   display: inline-block;
-   white-space: pre; /* preserves spacing */
-}
+        /* New color variables for the white theme */
+        :root {
+            --light-bg: #f0f0f0;
+            --light-form-bg: #ffffff;
+            --main-accent: #007bff; /* A bright blue for contrast */
+            --secondary-accent: #ff4500; /* An orange for the glitch effect */
+            --font-color: #333333;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+        }
 
-    #coordinates {
-       margin: 20px;
-       font-size: 16px;
-       font-weight: bold;
-       text-align: center;
-    }
-    #coordinates-table {
-        height: 450px;
-        overflow-y: auto;
-        display: block;
-    }
-    #coordinates-table thead th {
-        position: sticky;
-        top: 0;
-        background-color: #f2f2f2;
-        z-index: 1;
-    }
-    #form-sidebar button {
-        cursor: pointer;
-        margin-bottom: 5px;
-    }
-    #form-sidebar {
-      max-height: 300px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-  </style>
+        body {
+            margin: 0;
+            font-family: 'Orbitron', sans-serif;
+            color: var(--font-color);
+            background: var(--light-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Background grid effect - adapted for a light theme */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(to right, rgba(0, 123, 255, 0.1) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255, 69, 0, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: grid-pulse 5s infinite ease-in-out;
+            opacity: 0.2;
+        }
+
+        @keyframes grid-pulse {
+            0%, 100% { background-size: 50px 50px; }
+            50% { background-size: 48px 48px; }
+        }
+
+        .login-container {
+            background: var(--light-form-bg);
+            backdrop-filter: blur(5px);
+            border: 2px solid var(--main-accent);
+            box-shadow: 0 0 40px rgba(0, 123, 255, 0.3), inset 0 0 20px rgba(255, 69, 0, 0.2);
+            padding: 3rem;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            animation: fade-in 1.5s ease-out;
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .glitch {
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: 5px;
+            position: relative;
+            color: var(--main-accent);
+            text-shadow: 0 0 5px var(--main-accent), 0 0 20px var(--secondary-accent);
+            animation: glitch-anim 2s infinite linear alternate;
+        }
+
+        .glitch::before, .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glitch::before {
+            left: -2px;
+            text-shadow: 0 0 5px var(--secondary-accent), 0 0 20px var(--secondary-accent);
+            clip-path: inset(0 0 50% 0);
+            animation: glitch-anim-2 3s infinite linear alternate-reverse;
+        }
+
+        .glitch::after {
+            left: 2px;
+            text-shadow: 0 0 5px var(--main-accent), 0 0 20px var(--main-accent);
+            clip-path: inset(50% 0 0 0);
+            animation: glitch-anim-3 4s infinite linear alternate;
+        }
+        
+        @keyframes glitch-anim {
+            0% { transform: translate(0); }
+            20% { transform: translate(-5px, 5px); }
+            40% { transform: translate(-5px, -5px); }
+            60% { transform: translate(5px, 5px); }
+            80% { transform: translate(5px, -5px); }
+            100% { transform: translate(0); }
+        }
+
+        @keyframes glitch-anim-2 {
+            0% { transform: translate(0); }
+            20% { transform: translate(2px, 2px); }
+            40% { transform: translate(2px, -2px); }
+            60% { transform: translate(-2px, 2px); }
+            80% { transform: translate(-2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        @keyframes glitch-anim-3 {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        .subtitle {
+            color: #555;
+            margin-top: 0;
+            margin-bottom: 2rem;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 1rem;
+            color: var(--main-accent);
+            text-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px 0;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--secondary-accent);
+            outline: none;
+            color: var(--font-color);
+            font-size: 1.1rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .input-group input:focus {
+            border-bottom: 2px solid var(--main-accent);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+        }
+
+        .glitch-btn {
+            background: var(--main-accent);
+            color: var(--light-form-bg);
+            border: none;
+            padding: 15px 30px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+            border-radius: 5px;
+            box-shadow: 0 0 15px var(--main-accent);
+        }
+
+        .glitch-btn:hover {
+            transform: translateY(-3px);
+            background: var(--secondary-accent);
+            box-shadow: 0 0 15px var(--secondary-accent);
+        }
+
+        .links {
+            margin-top: 2rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .links a {
+            color: var(--main-accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+        }
+
+        .links a:hover {
+            color: var(--secondary-accent);
+            text-shadow: 0 0 10px var(--secondary-accent);
+        }
+
+        .error-message {
+            color: var(--secondary-accent);
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .error-message.visible {
+            opacity: 1;
+        }
+    </style>
 </head>
 <body>
-  <div class="container-fluid">
-    <div class="row">
-      <div class="col-md-4">
-        <select class="form-select mb-2 rounded-0" id="symbol-select">
-          <option value="0">Select Symbol</option>
-          <option value="ARUNAYA">ARUNAYA</option>
-          <option value="ATHER">ATHER</option>
-          <option value="MANOJJEWEL">MANOJJEWEL</option>
-        </select>
-        <input type="file" class="form-control rounded-0" id="file-input" accept="application/pdf">
-        <select class="form-select mt-2 rounded-0" id="form-type-select">
-          <option value="0">Select Form Type</option>
-          <option value="PRINTED_FORM">Printed Form</option>
-          <option value="BLANK_FORM">Blank Form</option>
-        </select>
-
-        <div>
-          <label>Add Field:</label>
-          <div id="form-sidebar"></div>
+    <div class="login-container">
+        <div class="login-form-box">
+            <h1 class="glitch" data-text="CYBERNET">CYBERNET</h1>
+            <p class="subtitle">Secure connection established.</p>
+            <form id="loginForm">
+                <div class="input-group">
+                    <label for="username">User ID</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="input-group">
+                    <label for="password">Access Key</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="glitch-btn">
+                    <span class="glitch-btn-text">INITIATE LOGIN</span>
+                </button>
+            </form>
+            <div class="links">
+                <a href="#">Forgot Access Key?</a>
+                <a href="#">Register New User</a>
+            </div>
+            <div id="message" class="error-message"></div>
         </div>
-
-        <button class="buildJSON btn btn-sm btn-danger mt-2 rounded-0">Final Submission</button>
-        <button class="downloadPreview btn btn-sm btn-primary mt-2 rounded-0">Preview PDF</button>
-        <div id="coordinates">Coordinates: (x: 0, y: 0)</div>
-        <table class="table table-bordered table-striped table-sm mt-3" id="coordinates-table">
-          <thead>
-              <tr>
-                  <th>Key</th>
-                  <th>X</th>
-                  <th>Y</th>
-                  <th>Font Size</th>
-                  <th>Font Spacing</th>
-                  <th>Value</th>
-                  <th>Action</th>
-              </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <div class="col-md-6">
-        <div id="pdf-container">
-          <canvas id="canvas"></canvas>
-        </div>
-      </div>
     </div>
-  </div>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
 
-  <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
+            const usernameInput = document.getElementById('username').value;
+            const passwordInput = document.getElementById('password').value;
+            const messageDiv = document.getElementById('message');
 
-  <script>
-    const pdfContainer = document.getElementById("pdf-container");
-    const canvas = document.getElementById("canvas");
-    const ctx = canvas.getContext("2d");
-    const coordinatesDisplay = document.getElementById("coordinates");
-    let pdfDoc = null, scale = 1, currentViewport = null;
-    let placeholderCounter = 0;
+            const validUsername = 'admin';
+            const validPassword = 'admin';
 
-    const formElements = [
-      { type: "text", label: "TextBox", value: "" }
-    ];
+            if (usernameInput === validUsername && passwordInput === validPassword) {
+                messageDiv.textContent = 'Login successful! Redirecting...';
+                messageDiv.classList.add('visible');
+                messageDiv.style.color = 'var(--main-accent)';
 
-    const formSidebar = document.getElementById("form-sidebar");
-
-    formElements.forEach(el => {
-      const btn = document.createElement("button");
-      btn.className = "btn btn-sm btn-outline-primary w-100";
-      btn.style.marginBottom = "5px";
-      btn.textContent = `${el.type.toUpperCase()}`;
-
-      btn.addEventListener("click", () => {
-        const key = `${el.label}_${++placeholderCounter}`;
-        const x = 50, y = 50, fontSize = 12, wordspaceCount = 0;
-        let value = el.value || el.label;
-        addMovableText(key, x, y, fontSize, wordspaceCount, value);
-      });
-
-      formSidebar.appendChild(btn);
-    });
-
-    document.getElementById("file-input").addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (file && file.type === "application/pdf") {
-        const fileReader = new FileReader();
-        fileReader.onload = async function (event) {
-          const typedArray = new Uint8Array(event.target.result);
-          pdfDoc = await pdfjsLib.getDocument(typedArray).promise;
-          renderPage(1);
-        };
-        fileReader.readAsArrayBuffer(file);
-      }
-    });
-
-    async function renderPage(pageNumber) {
-      const page = await pdfDoc.getPage(pageNumber);
-      const viewport = page.getViewport({ scale });
-      currentViewport = viewport;
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-      canvas.style.width = `${viewport.width}px`;
-      canvas.style.height = `${viewport.height}px`;
-      await page.render({ canvasContext: ctx, viewport }).promise;
-    }
-
-
-
-
-    function addMovableText(key, x, y, fontSize, wordspaceCount, value) {
-  const div = document.createElement("div");
-  div.className = "movable-text";
-  div.textContent = value;
-  div.title = key;
-  div.style.left = `${x}px`;
-  div.style.top = `${y}px`;
-  div.style.fontSize = `${fontSize}px`;
-  div.style.wordSpacing = `${wordspaceCount}px`;
-  div.setAttribute("data-key", key);
-
-  let isDragging = false, offsetX = 0, offsetY = 0;
-
-  div.addEventListener("mousedown", (e) => {
-    isDragging = true;
-    offsetX = e.offsetX;
-    offsetY = e.offsetY;
-  });
-
-  document.addEventListener("mousemove", (e) => {
-    if (!isDragging) return;
-    const rect = pdfContainer.getBoundingClientRect();
-    let newX = e.clientX - rect.left - offsetX;
-    let newY = e.clientY - rect.top - offsetY;
-    newX = Math.max(0, Math.min(newX, rect.width - div.offsetWidth));
-    newY = Math.max(0, Math.min(newY, rect.height - div.offsetHeight));
-    div.style.left = `${newX}px`;
-    div.style.top = `${newY}px`;
-
-    const pdfX = Math.round(newX);
-    const pdfY = Math.round(currentViewport.height - newY - div.offsetHeight);
-    coordinatesDisplay.textContent = `PDF Coordinates: (x: ${pdfX}, y: ${pdfY})`;
-
-    const row = $("#coordinates-table tbody tr").filter(function() {
-      return $(this).data("key") === div.getAttribute("data-key");
-    });
-    if(row.length) {
-      row.data("x", pdfX);
-      row.data("y", pdfY);
-      row.find(".x").text(pdfX);
-      row.find(".y").text(pdfY);
-    }
-  });
-
-  document.addEventListener("mouseup", () => isDragging = false);
-  pdfContainer.appendChild(div);
-
-  const pdfX = Math.round(x);
-  const pdfY = Math.round(currentViewport.height - y);
-
-  const $row = $(`
-    <tr data-key="${key}" data-x="${pdfX}" data-y="${pdfY}" data-value="${value}">
-      <td><input type="text" class="form-control rounded-0 key-input" value="${key}"></td>
-      <td class="x">${pdfX}</td>
-      <td class="y">${pdfY}</td>
-      <td><input type="number" class="form-control rounded-0 fontSize" value="${fontSize}"></td>
-      <td><input type="number" class="form-control rounded-0 wordspaceCount" value="${wordspaceCount}"></td>
-      <td><input type="text" class="form-control rounded-0 value-input" value="${value}"></td>
-      <td><input type="checkbox" class="active rounded-0" checked></td>
-    </tr>
-  `);
-  $("#coordinates-table tbody").append($row);
-
-  // Update Key
-  $row.find(".key-input").on("input", function() {
-    const newKey = $(this).val();
-    $row.data("key", newKey);
-    div.setAttribute("data-key", newKey);
-    div.title = newKey;
-  });
-
-  // Update Value/Label
-  $row.find(".value-input").on("input", function() {
-    const newValue = $(this).val();
-    $row.data("value", newValue);
-    div.textContent = newValue;
-  });
-
-  // Update Font Size
-  $row.find(".fontSize").on("input", function() {
-    const newSize = $(this).val();
-    div.style.fontSize = `${newSize}px`;
-  });
-
-// Update Letter Spacing (instead of word spacing)
-$row.find(".wordspaceCount").on("input", function() {
-  const newSpacing = $(this).val();
-  div.style.letterSpacing = `${newSpacing}px`; // use letter-spacing
-});
-
-}
-
-
-
-
-
-
-  
-    document.addEventListener('DOMContentLoaded', () => {
-      $(".buildJSON").on("click", function () {
-        const array = [];
-        $("#coordinates-table tbody tr").each(function (_, elm) {
-          const key = $(elm).data("key");
-          const x = $(elm).data("x") || 0;
-          const y = $(elm).data("y") || 0;
-          const value = $(elm).find(".value-input").val() || "unknown";
-          const fontSize = $(elm).find(".fontSize").val() || 10;
-          const letterSpacing = $(elm).find(".wordspaceCount").val() || 0;
-          const isChecked = $(elm).find("input[type='checkbox']").is(":checked");
-          if(isChecked) {
-            array.push({
-              x: Number(x),
-              y: Number(y),
-              key: key,
-              fontSize: Number(fontSize),
-              letterSpacing: Number(letterSpacing),
-              value: value,
-              is_checked: 1
-            });
-          }
+                setTimeout(function() {
+                    window.location.href = 'dashboard.html';
+                }, 1500);
+            } else {
+                messageDiv.textContent = 'Invalid User ID or Access Key. Access denied.';
+                messageDiv.classList.add('visible');
+                messageDiv.style.color = 'var(--secondary-accent)';
+            }
         });
-
-        const finalData = {
-          symbol: $("#symbol-select").val(),
-          type: $("#form-type-select").val(),
-          coordinates: array,
-        };
-        console.log(finalData);
-        // Electron overlay function
-        window.electronAPI.overlayPDF(finalData);
-      });
-    });
-  </script>
+    </script>
 </body>
 </html>
