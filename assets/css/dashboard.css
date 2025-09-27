@@ -1,0 +1,56 @@
+
+
+    #pdf-container {
+       display: inline-block;
+       position: relative;
+       margin: 0;
+       padding: 0;
+       line-height: 0;
+    }
+    #canvas {
+       display: block;
+       border: 1px solid #ccc;
+       margin: 0;
+       padding: 0;
+       background-color: aqua;
+    }
+
+.movable-text {
+   position: absolute;
+   background: rgba(255, 255, 0, 0.7);
+   padding: 5px 5px;
+   cursor: move;
+   border: 1px solid #000;
+   color: fuchsia;
+   display: inline-block;
+   white-space: pre; /* preserves spacing */
+}
+
+    #coordinates {
+       margin: 20px;
+       font-size: 16px;
+       font-weight: bold;
+       text-align: center;
+    }
+    #coordinates-table {
+        height: 450px;
+        overflow-y: auto;
+        display: block;
+    }
+    #coordinates-table thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f2f2f2;
+        z-index: 1;
+    }
+    #form-sidebar button {
+        cursor: pointer;
+        margin-bottom: 5px;
+    }
+    #form-sidebar {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+    }

@@ -3,81 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PDF Viewer with Drag & Drop Fields & Sidebar</title>
+  <title>Smart ASBA - Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
-  <style>
-    #pdf-container {
-       display: inline-block;
-       position: relative;
-       margin: 0;
-       padding: 0;
-       line-height: 0;
-    }
-    #canvas {
-       display: block;
-       border: 1px solid #ccc;
-       margin: 0;
-       padding: 0;
-       background-color: aqua;
-    }
-
-.movable-text {
-   position: absolute;
-   background: rgba(255, 255, 0, 0.7);
-   padding: 5px 5px;
-   cursor: move;
-   border: 1px solid #000;
-   color: fuchsia;
-   display: inline-block;
-   white-space: pre; /* preserves spacing */
-}
-
-    #coordinates {
-       margin: 20px;
-       font-size: 16px;
-       font-weight: bold;
-       text-align: center;
-    }
-    #coordinates-table {
-        height: 450px;
-        overflow-y: auto;
-        display: block;
-    }
-    #coordinates-table thead th {
-        position: sticky;
-        top: 0;
-        background-color: #f2f2f2;
-        z-index: 1;
-    }
-    #form-sidebar button {
-        cursor: pointer;
-        margin-bottom: 5px;
-    }
-    #form-sidebar {
-      max-height: 300px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 10px;
-    }
-  </style>
+   <link rel="stylesheet" href="assets/css/dashboard.css">
+    <link rel="stylesheet" href="assets/css/common.css">
 </head>
 <body>
+
+  <div id="navbar-container"></div> <!-- Navbar will load here -->
+
   <div class="container-fluid">
     <div class="row">
+
+
       <div class="col-md-4">
-        <select class="form-select mb-2 rounded-0" id="symbol-select">
-          <option value="0">Select Symbol</option>
-          <option value="ARUNAYA">ARUNAYA</option>
-          <option value="ATHER">ATHER</option>
-          <option value="MANOJJEWEL">MANOJJEWEL</option>
-        </select>
-        <input type="file" class="form-control rounded-0" id="file-input" accept="application/pdf">
-        <select class="form-select mt-2 rounded-0" id="form-type-select">
-          <option value="0">Select Form Type</option>
-          <option value="PRINTED_FORM">Printed Form</option>
-          <option value="BLANK_FORM">Blank Form</option>
-        </select>
+        <label for="symbol-select">Select Symbol:</label>
+        <input type="text" class="form-control rounded-0 mb-1" id="symbol-select" placeholder="Symbol">
+
+        <input type="file" class="form-control rounded-0 mb-1" id="file-input" accept="application/pdf">
+ 
 
         <div>
           <label>Add Field:</label>
@@ -107,12 +51,32 @@
           <canvas id="canvas"></canvas>
         </div>
       </div>
+
+      <div class="col-md-2">
+        <div class="alert alert-info">
+          <h5>Instructions:</h5>
+          <ul>
+            <li>Upload a PDF file to start.</li>
+            <li>Click and drag text boxes to position them.</li>
+            <li>Adjust font size and spacing as needed.</li>
+            <li>Use the "Final Submission" button to save your layout.</li>
+            <li>Preview your PDF with the "Preview PDF" button.</li>
+          </ul>
+        </div>
+        <!-- display save json and overflow-->
+        <div>
+          <label for="json-output">Generated JSON:</label>
+          <textarea id="json-output" class="form-control rounded-0" rows="10" readonly></textarea>
+        </div>
+      </div>
     </div>
   </div>
 
-  <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="assets/js/navbar.js"></script>
+    <script src="assets/js/jquery-3.7.1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+     <!-- <script src="assets/js/pdf.min.js"></script> -->
+    <script src="assets/js/bootstrap.bundle.min.js"></script>
 
   <script>
     const pdfContainer = document.getElementById("pdf-container");
@@ -295,10 +259,10 @@ $row.find(".wordspaceCount").on("input", function() {
 
         const finalData = {
           symbol: $("#symbol-select").val(),
-          type: $("#form-type-select").val(),
           coordinates: array,
         };
         console.log(finalData);
+        $("#json-output").text(JSON.stringify(finalData, null, 2));
         // Electron overlay function
         window.electronAPI.overlayPDF(finalData);
       });
