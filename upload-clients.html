@@ -4,23 +4,92 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ASBA Form</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
-   <link rel="stylesheet" href="assets/css/style.css">
-   <link rel="stylesheet" href="assets/css/common.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/common.css">
   </head>
   <body>
+    <div id="navbar-container"></div> <!-- Navbar -->
 
-<div id="navbar-container"></div> <!-- Navbar will load here -->
+    <div class="container mt-4">
+      <div class="row g-3">
+        <div class="col">
+          <label for="formFile" class="form-label">Select file which you want to print</label>
+          <input type="file" class="form-control rounded-0" id="input-pdf">
+        </div>
+        <div class="col">
+          <label for="formFileExcel" class="form-label">Upload Excel file which contains form data</label>
+          <input type="file" class="form-control rounded-0" id="input-excel">
+        </div>
 
-  <!-- <p id="info"></p> -->
+        <div class="col mt-4">
+        <label for="symbol-dropdown" class="form-label">Select Symbol Key</label> 
+        <select id="symbol-dropdown" class="form-select">
+          <option value="" selected disabled>Loading keys...</option>
+        </select>
+      </div>
 
-  <h1>Upload Clients</h1>
+       <div class="col-md-12">
+        <button id="start-printing" class="btn btn-primary mt-4">Start Printing</button>
+      </div>
+
+      </div>
+
+      
+
+    </div>
 
     <script src="assets/js/navbar.js"></script>
     <script src="assets/js/jquery-3.7.1.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-     <!-- <script src="assets/js/pdf.min.js"></script> -->
     <script src="assets/js/bootstrap.bundle.min.js"></script>
 
+    <script>
+      let currentSymbolKey = null;
+
+      async function loadKeys() {
+        try {
+          const keys = await window.electronAPI.getAllKeys();
+          const dropdown = document.getElementById('symbol-dropdown');
+          dropdown.innerHTML = '';
+
+          if (!keys || keys.length === 0) {
+            const option = document.createElement('option');
+            option.textContent = 'No keys stored';
+            option.disabled = true;
+            dropdown.appendChild(option);
+            return;
+          }
+
+          const defaultOption = document.createElement('option');
+          defaultOption.textContent = 'Select a symbol key';
+          defaultOption.disabled = true;
+          defaultOption.selected = true;
+          dropdown.appendChild(defaultOption);
+
+          keys.forEach(key => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = key;
+            dropdown.appendChild(option);
+          });
+
+          dropdown.addEventListener('change', async (e) => {
+            const selectedKey = e.target.value;
+            currentSymbolKey = selectedKey;
+            try {
+              const data = await window.electronAPI.getItem(selectedKey);
+            } catch (err) {
+              console.error('Error fetching key data:', err);
+            }
+          });
+
+        } catch (err) {
+          console.error('Error loading keys:', err);
+        }
+      }
+
+
+      loadKeys();
+    </script>
   </body>
 </html>

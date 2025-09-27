@@ -1,5 +1,5 @@
 {
-  "name": "asba-printing-app",
+  "name": "SmartPrint",
   "version": "1.0.0",
   "description": "",
   "main": "main.js",
@@ -20,5 +20,12 @@
     "node-persist": "^4.0.4",
     "pdf-lib": "^1.17.1",
     "redis": "^5.8.2"
+  },
+ "build": {
+    "appId": "com.dynamitetechnology.smartprint",
+    "win": {
+      "target": "nsis",
+      "icon": "build/smartprint.ico"
+    }
   }
 }

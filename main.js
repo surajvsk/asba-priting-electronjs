@@ -5,6 +5,11 @@ const fs = require('fs');
 const path = require('node:path')
 const { PDFDocument, rgb } = require('pdf-lib'); // Using pdf-lib for PDF overlay
 
+let appSettings = {
+  inputPath: '',
+  outputPath: ''
+};
+
 const createWindow = async () => {
   const win = new BrowserWindow({
     width: 800,
@@ -23,6 +28,9 @@ const createWindow = async () => {
  const storagePath = path.join(app.getPath('userData'), 'storage');
   await storage.initStorage(storagePath); // safe folder for EXE
 }
+
+
+
 
 
 
@@ -136,12 +144,43 @@ ipcMain.handle('storage-clear', async () => {
   return await storage.clearAll();
 });
 
-// // Optional: IPC handlers to access stored overlays
-// ipcMain.handle('storage-set', async (event, key, value) => await storage.setItem(key, value));
-// ipcMain.handle('storage-get', async (event, key) => await storage.getItem(key));
-// ipcMain.handle('storage-remove', async (event, key) => await storage.removeItem(key));
-// ipcMain.handle('storage-keys', async () => await storage.getAllKeys());
-// ipcMain.handle('storage-clear', async () => await storage.clearAll());
+
+ipcMain.handle('select-folder', async () => {
+  const result = await dialog.showOpenDialog({ properties: ['openDirectory'] });
+  return result.canceled ? null : result.filePaths[0];
+});
+
+ipcMain.handle('save-settings', async (event, settings) => {
+  try {
+    const settingsWithDate = {
+      ...settings,
+      savedAt: new Date().toISOString()
+    };
+
+    // Save persistently
+    await storage.setItem('appSettings', settingsWithDate);
+
+    // Update in-memory copy
+    appSettings = settingsWithDate;
+
+    return true;
+  } catch (err) {
+    console.error('Error saving settings:', err);
+    return false;
+  }
+});
+
+ipcMain.handle('get-settings', async () => {
+  try {
+    if (!appSettings) {
+      appSettings = await storage.getItem('appSettings') || {};
+    }
+    return appSettings;
+  } catch (err) {
+    console.error('Error getting settings:', err);
+    return {};
+  }
+});
 
 
 app.whenReady().then(() => {

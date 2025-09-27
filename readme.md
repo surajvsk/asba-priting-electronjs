@@ -10,4 +10,8 @@ npm install electron-packager -g
 
 npm install electron-builder --save-dev
 
-npx electron-packager . "My Electron App" --platform=win32 --arch=x64 --out=dist --overwrite --icon=build/icon.ico
+
+
+npx electron-packager . "AsbaPrint" --platform=win32 --arch=x64 --out=dist --overwrite --icon=build/icon.ico
+
+npx electron-builder --win --x64

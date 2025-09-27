@@ -7,5 +7,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getAllKeysWithValues: () => ipcRenderer.invoke('get-all-keys-with-values'),
   getItem: (key) => ipcRenderer.invoke('storage-get', key),
   removeItem: (key) => ipcRenderer.invoke('storage-remove', key),
-  clearAll: () => ipcRenderer.invoke('storage-clear')
+  clearAll: () => ipcRenderer.invoke('storage-clear'),
+  selectFolder: () => ipcRenderer.invoke('select-folder'),
+  saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
+  getSettings: () => ipcRenderer.invoke('get-settings')
 });
